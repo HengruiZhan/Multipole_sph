@@ -87,8 +87,13 @@ class Multipole():
 
         return mtilde_r, mtilde_i
 
-    def phi(self, r, z):
+    def phi(self, r, z, dr, dz=0):
         # return Phi(r), using Eq. 20
+
+        assert dr <= self.g.dr/2 and dr >= 0
+        assert dz <= self.g.dz/2 and dz >= 0
+
+        r -= dr
 
         radius = np.sqrt((r - self.center[0])**2 +
                          (z - self.center[1])**2)
@@ -102,8 +107,10 @@ class Multipole():
 
             Y_lm = sph_harm(0, l, 0.0, theta)
             R_lm = np.sqrt(4*np.pi/(2*l + 1)) * radius**l * Y_lm
-            I_lm = np.sqrt(4*np.pi/(2*l + 1)) * Y_lm / radius**(l+1)
+            I_lm = np.nan_to_num(np.sqrt(4*np.pi/(2*l + 1)) *
+                                 Y_lm / radius**(l+1))
 
-            phi_zone += mtilde_r * np.conj(I_lm) + np.conj(mtilde_i) * R_lm
+            phi_zone += sc.G * (mtilde_r * np.conj(I_lm) +
+                                np.conj(mtilde_i) * R_lm)
 
         return -np.real(phi_zone)
