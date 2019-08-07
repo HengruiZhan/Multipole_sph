@@ -1,7 +1,7 @@
 class comp_diff(object):
     """The class comp_diff is the normalized comparison difference，
-    apotential is the analytical potential of an object,
-    apppotential is the multipole expansion approximation potential."""
+    analytical_phi is the analytical potential of an object,
+    multipole_phi is the multipole expansion approximation potential."""
 
-    def __init__(self, apotential, apppotential):
-        self.difference = (apppotential-apotential)/apotential
+    def __init__(self, analytical_phi, multipole_phi):
+        self.difference = (multipole_phi-analytical_phi)/analytical_phi
