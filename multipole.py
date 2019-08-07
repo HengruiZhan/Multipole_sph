@@ -94,6 +94,7 @@ class Multipole():
         assert dz <= self.g.dz/2 and dz >= 0
 
         r -= dr
+        z -= dz
 
         radius = np.sqrt((r - self.center[0])**2 +
                          (z - self.center[1])**2)
