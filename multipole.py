@@ -33,6 +33,18 @@ class Multipole():
         for l in range(self.n_moments):
             self.m_r.append(np.zeros((self.n_bins), dtype=np.complex128))
             self.m_i.append(np.zeros((self.n_bins), dtype=np.complex128))
+            
+    def compute_harmonics(self, l, r, z):
+        radius = np.sqrt((r - self.center[0])**2 +
+                         (z - self.center[1])**2)
+        theta = np.arctan2(r, z)
+
+        Y_lm = sph_harm(0, l, 0.0, theta)
+        R_lm = np.sqrt(4*np.pi/(2*l + 1)) * radius**l * Y_lm
+        I_lm = np.nan_to_num(np.sqrt(4*np.pi/(2*l + 1)) *
+                             Y_lm / radius**(l+1))
+
+        return R_lm, I_lm
 
     def compute_expansion(self, rho, l):
         # rho is density that lives on a grid self.g
@@ -87,6 +99,7 @@ class Multipole():
 
         return mtilde_r, mtilde_i
 
+    """
     def phi(self, r, z, dr, dz=0):
         # return Phi(r), using Eq. 20
 
@@ -111,6 +124,40 @@ class Multipole():
             I_lm = np.nan_to_num(np.sqrt(4*np.pi/(2*l + 1)) *
                                  Y_lm / radius**(l+1))
 
+            phi_zone += sc.G * (mtilde_r * np.conj(I_lm) +
+                                np.conj(mtilde_i) * R_lm)
+
+        return -np.real(phi_zone)
+        """
+    
+    def phi(self, r, z):
+        # return Phi(r), using Eq. 20
+        # evaluated at the face of the cell
+
+        radius = np.sqrt((r - self.center[0])**2 +
+                         (z - self.center[1])**2)
+
+        phi_zone = 0.0
+        for l in range(self.n_moments+1):
+            mtilde_r, mtilde_i = self.sample_mtilde(l, radius)
+            # calculate the average of the solid harmonic function of all
+            # the surface
+            # solid harmonic function at r-dr/2 surface
+            R_lm_r_minus, I_lm_r_minus =\
+                self.compute_harmonics(l, r-self.g.dr/2, z)
+            # solid harmonic function at r+dr/2 surface
+            R_lm_r_plus, I_lm_r_plus =\
+                self.compute_harmonics(l, r+self.g.dr/2, z)
+            # solid harmonic function at r-dz/2 surface
+            R_lm_z_minus, I_lm_z_minus =\
+                self.compute_harmonics(l, r, z-self.g.dz/2)
+            # solid harmonic function at r+dz/2 surface
+            R_lm_z_plus, I_lm_z_plus =\
+                self.compute_harmonics(l, r, z+self.g.dz/2)
+            # average harmonic function of all the surface
+            R_lm = 1/4*(R_lm_r_minus+R_lm_r_plus+R_lm_z_minus+R_lm_z_plus)
+            I_lm = 1/4*(I_lm_r_minus+I_lm_r_plus+I_lm_z_minus+I_lm_z_plus)
+            # calculate Eq. 20
             phi_zone += sc.G * (mtilde_r * np.conj(I_lm) +
                                 np.conj(mtilde_i) * R_lm)
 
